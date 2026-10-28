@@ -9,6 +9,24 @@ set(CMAKE_CXX_STANDARD 23)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
 
+option(QSQLBUILDER_ENABLE_LTO "Enable link-time optimization in Release and RelWithDebInfo builds." ${QSQLBuilder_IS_TOP_LEVEL})
+set(_qsqlbuilder_lto OFF)
+if(QSQLBuilder_ENABLE_LTO)
+    include(CheckIPOSupported)
+    check_ipo_supported(RESULT _qsqlbuilder_lto OUTPUT _qsqlbuilder_lto_output LANGUAGES CXX)
+    if(_qsqlbuilder_lto_output)
+        # Initializes INTERPROCEDURAL_OPTIMIZATION_<CONFIG> of every target created below,
+        # QWindowKit and the example included.
+        set(CMAKE_INTERPROCEDURAL_OPTIMIZATION_RELEASE ON)
+        set(CMAKE_INTERPROCEDURAL_OPTIMIZATION_RELWITHDEBINFO ON)
+        set(_qsqlbuilder_lto ON)
+    else()
+        message(WARNING "Link-time optimization is not supported by the toolchain, building without it:\n"
+            "${_qsqlbuilder_lto_output}")
+    endif()
+endif()
+
+
 set(_sqlbuilder_qt_fallback_paths)
 foreach(_var IN ITEMS QT_DIR QTDIR)
     if(${_var})
