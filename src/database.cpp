@@ -1,9 +1,9 @@
-#include "database.h"
-#include "deleter.h"
-#include "inserter.h"
-#include "query.h"
-#include "selector.h"
-#include "updater.h"
+#include "qsqlbuilder/database.h"
+#include "qsqlbuilder/deleter.h"
+#include "qsqlbuilder/inserter.h"
+#include "qsqlbuilder/query.h"
+#include "qsqlbuilder/selector.h"
+#include "qsqlbuilder/updater.h"
 
 bool Database::_logQueries { false };
 

@@ -1,6 +1,6 @@
-#include "deleter.h"
-#include "query.h"
-#include "where.h"
+#include "qsqlbuilder/deleter.h"
+#include "qsqlbuilder/query.h"
+#include "qsqlbuilder/where.h"
 
 struct Deleter::DeleterPrivate {
     DeleterPrivate(const Query* query, const QString& where) : _query(query), _where(where)

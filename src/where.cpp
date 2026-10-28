@@ -1,4 +1,4 @@
-#include "where.h"
+#include "qsqlbuilder/where.h"
 
 ClauseUtils::ClauseUtils(const QString& field, const QString& op, const QString& value)
 {

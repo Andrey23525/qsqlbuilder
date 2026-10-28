@@ -67,7 +67,7 @@ target_include_directories(${PROJECT_NAME}
 )
 
 target_compile_features(${PROJECT_NAME} PUBLIC cxx_std_23)
-target_precompile_headers(${PROJECT_NAME} PUBLIC include/pch.h)
+target_precompile_headers(${PROJECT_NAME} PRIVATE include/qsqlbuilder/pch.h)
 
 target_link_libraries(${PROJECT_NAME}
     PUBLIC

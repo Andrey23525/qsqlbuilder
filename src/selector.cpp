@@ -1,7 +1,7 @@
-#include "selector.h"
-#include "database.h"
-#include "query.h"
-#include "where.h"
+#include "qsqlbuilder/selector.h"
+#include "qsqlbuilder/database.h"
+#include "qsqlbuilder/query.h"
+#include "qsqlbuilder/where.h"
 
 void Selector::resolveColumns(const Database& db)
 {

@@ -1,6 +1,6 @@
-#include "updater.h"
-#include "query.h"
-#include "where.h"
+#include "qsqlbuilder/updater.h"
+#include "qsqlbuilder/query.h"
+#include "qsqlbuilder/where.h"
 
 struct Updater::UpdaterPrivate {
     UpdaterPrivate(const Query* q, const QVariantMap& updateValues) : _query(q), _updateValues(updateValues)

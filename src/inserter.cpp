@@ -1,6 +1,6 @@
-#include "inserter.h"
-#include "query.h"
-#include "where.h"
+#include "qsqlbuilder/inserter.h"
+#include "qsqlbuilder/query.h"
+#include "qsqlbuilder/where.h"
 
 struct Inserter::InserterPrivate {
     InserterPrivate(const Query* q, const QStringList& fields) : _query(q), _fields(fields)

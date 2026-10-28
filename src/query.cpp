@@ -1,10 +1,10 @@
-#include "query.h"
+#include "qsqlbuilder/query.h"
 
-#include "deleter.h"
-#include "inserter.h"
-#include "selector.h"
-#include "updater.h"
-#include "where.h"
+#include "qsqlbuilder/deleter.h"
+#include "qsqlbuilder/inserter.h"
+#include "qsqlbuilder/selector.h"
+#include "qsqlbuilder/updater.h"
+#include "qsqlbuilder/where.h"
 
 Query::Query(const QString& tableName, const QString& primaryKey) : _tableName(tableName), _primaryKey(primaryKey)
 {
