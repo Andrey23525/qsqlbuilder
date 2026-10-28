@@ -1,30 +1,33 @@
-#include "Selector.h"
-#include "Query.h"
+#include "selector.h"
 #include "database.h"
+#include "query.h"
+#include "where.h"
 
-// Fills in all the columns of the target table if none were given and resolves disambiduation in column names
 void Selector::resolveColumns(const Database& db)
 {
-    const auto& columnNames = db.columnNames(_query->tableName());
-    if(_fields.isEmpty())
+    const QString tableName = _query->tableName();
+    const QStringList columnNames = db.columnNames(tableName);
+    if(_fields.isEmpty()) {
         _fields = columnNames;
+    }
 
-    auto thisColumnSet = QSet<QString>(columnNames.begin(), columnNames.end());
     for(const auto& part : _joinParts) {
-        const auto& tableColumnNames = db.columnNames(part._joinTable);
-        auto otherColumnSet = QSet<QString>(tableColumnNames.begin(), tableColumnNames.end());
-        otherColumnSet.intersect(thisColumnSet);
+        const QStringList otherColumnNames = db.columnNames(part._joinTable);
+        const QString resolutionTable = part._joinDisambigToOther ? part._joinTable : tableName;
 
-        for(std::size_t i = 0; i < _fields.count(); ++i) {
-            auto fieldName = _fields[i];
-            if(otherColumnSet.contains(fieldName)) {
-                auto resolutionFieldName =
-                    QString("%1.%2").arg(!part._joinDisambigToOther ? _query->tableName() : part._joinTable).arg(fieldName);
-                // hacky a bit, but IT WORKS
-                _where.replace(fieldName, resolutionFieldName);
-                _where.replace('.', "\".\"");
-                _fields.replace(i, resolutionFieldName);
+        for(qsizetype i = 0; i < _fields.count(); ++i) {
+            const QString fieldName = _fields[i];
+            const bool inThisTable = columnNames.contains(fieldName);
+            const bool inOtherTable = otherColumnNames.contains(fieldName);
+            if(!inThisTable || !inOtherTable) {
+                continue;
             }
+
+            const QString resolutionFieldName = QString("%1.%2").arg(resolutionTable, fieldName);
+            // hacky a bit, but IT WORKS
+            _where.replace(fieldName, resolutionFieldName);
+            _where.replace('.', "\".\"");
+            _fields.replace(i, resolutionFieldName);
         }
     }
 }
@@ -35,8 +38,6 @@ QString Selector::joinTail() const
         return {};
     }
 
-    QString result;
-
     QStringList joiner;
     joiner.reserve(_joinParts.size());
 
@@ -44,14 +45,16 @@ QString Selector::joinTail() const
         joiner << part._sql;
     }
 
-    result = joiner.join(' ');
+    return joiner.join(' ');
+}
 
-    return result;
+QString Selector::tail() const
+{
+    const QStringList parts { _groupBy, _having, _order, _limit, _offset };
+    return parts.join(' ');
 }
 
 /***************************************************************************************/
-
-const QString Selector::SELECT_SQL { "SELECT %1 FROM %2 %3 WHERE %4 %5;" };
 
 Selector::Selector(const Query* q, const QStringList& fields) : _query(q), _fields(fields)
 {
@@ -61,21 +64,20 @@ Selector::~Selector()
 {
 }
 
-Selector::Selector(Selector&&) = default;
+Selector::Selector(Selector&& rhs) noexcept = default;
 
 Selector Selector::join(const QString& otherTable, const std::pair<QString, QString>& joinColumns, Join::JoinType joinType,
     bool resolveDisambigToOther)
 {
-    JoinPart part;
+    const QString tableName = _query->tableName();
+    const QString& thisColumn = joinColumns.first;
+    const QString& otherColumn = joinColumns.second;
+    const QString condition = QString("\"%1\".\"%2\"=\"%3\".\"%4\"").arg(tableName, thisColumn, otherTable, otherColumn);
 
-    part._joinTable = otherTable;
-    part._joinDisambigToOther = resolveDisambigToOther;
-    part._sql =
-        QString("%1 JOIN %2 on %3")
-            .arg(QVariant::fromValue(joinType).toString())
-            .arg(otherTable)
-            .arg(QString("\"%1\".\"%2\"=\"%3\".\"%4\"").arg(_query->tableName(), joinColumns.first, otherTable, joinColumns.second));
+    const QString joinTypeName = QVariant::fromValue(joinType).toString();
+    const QString sql = QString("%1 JOIN %2 on %3").arg(joinTypeName, otherTable, condition);
 
+    const JoinPart part { sql, otherTable, resolveDisambigToOther };
     _joinParts.append(part);
     return std::move(*this);
 }
@@ -88,13 +90,19 @@ Selector Selector::where(ClauseUtils&& clause) &&
 
 Selector Selector::limit(int count) &&
 {
-    _limit = count > 0 ? QString("LIMIT %1").arg(count) : "";
+    if(count <= 0) {
+        _limit.clear();
+        return std::move(*this);
+    }
+
+    _limit = QString("LIMIT %1").arg(count);
     return std::move(*this);
 }
 
 Selector Selector::orderBy(const QString& field, Order::OrderType selectOrder) &&
 {
-    _order = QString("ORDER BY %1 %2").arg(field).arg(QVariant::fromValue(selectOrder).toString());
+    const QString orderName = QVariant::fromValue(selectOrder).toString();
+    _order = QString("ORDER BY %1 %2").arg(field, orderName);
     return std::move(*this);
 }
 

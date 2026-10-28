@@ -1,6 +1,6 @@
 #pragma once
 
-#include "Where.h"
+class ClauseUtils;
 class Query;
 class Database;
 
@@ -81,10 +81,24 @@ public:
      * \param fields    --list of column names in SELECT ... FROM, all columns of the target table if empty
      */
     explicit Selector(const Query* q, const QStringList& fields);
+
+    /*!
+     * \brief ~Selector -- destructor
+     */
     ~Selector();
 
-    Selector(Selector&&);
-    Selector& operator=(Selector&&) = default;
+    /*!
+     * \brief Selector  -- move constructor
+     * \param rhs       -- generator to be moved from
+     */
+    Selector(Selector&& rhs) noexcept;
+
+    /*!
+     * \brief operator= -- move assignment
+     * \param rhs       -- generator to be moved from
+     * \return          -- this generator
+     */
+    Selector& operator=(Selector&& rhs) noexcept = default;
 
     /*!
      * \brief join                      -- adds "JOIN ..." part, use thoughtfully
@@ -107,7 +121,7 @@ public:
         bool resolveDisambigToOther = false);
 
     /*!
-     * \brief where     -- "WHERE ..." clause (see OP namespace for details)
+     * \brief where     -- "WHERE ..." clause (see where.h for details)
      * \param clause    -- some aggregated clause
      * \return          -- this generator as rvalue to be reused
      */
@@ -149,57 +163,105 @@ public:
      */
     Selector offset(int offset) &&;
 
-    // Fills in all the columns of the target table if none were given and resolves disambiduation in column names
+    /*!
+     * \brief resolveColumns    -- fills in all the columns of the target table if none were given
+     * and resolves disambiduation in column names, Database::execute() calls it
+     * \param db                -- database to get the tables' columns from
+     */
     void resolveColumns(const Database& db);
 
-    const Query* query()
+    /*!
+     * \brief query -- the Query class, that created the generator
+     * \return      -- ptr to the Query class
+     */
+    const Query* query() const
     {
         return _query;
     }
 
+    /*!
+     * \brief fields    -- column names in SELECT ... FROM
+     * \return          -- list of column names
+     */
     QStringList fields() const
     {
         return _fields;
     }
 
+    /*!
+     * \brief where -- generated "WHERE ..." clause without the keyword
+     * \return      -- clause, empty if not set
+     */
     QString where() const
     {
         return _where;
     }
 
+    /*!
+     * \brief limit -- generated "LIMIT x" part
+     * \return      -- part, empty if not set
+     */
     QString limit() const
     {
         return _limit;
     }
 
+    /*!
+     * \brief order -- generated "ORDER BY ..." part
+     * \return      -- part, empty if not set
+     */
     QString order() const
     {
         return _order;
     }
 
+    /*!
+     * \brief having    -- generated "HAVING ..." part
+     * \return          -- part, empty if not set
+     */
     QString having() const
     {
         return _having;
     }
 
+    /*!
+     * \brief groupBy   -- generated "GROUP BY ..." part
+     * \return          -- part, empty if not set
+     */
     QString groupBy() const
     {
         return _groupBy;
     }
 
+    /*!
+     * \brief offset    -- generated "OFFSET x" part
+     * \return          -- part, empty if not set
+     */
     QString offset() const
     {
         return _offset;
     }
 
+    /*!
+     * \brief joinParts -- added "JOIN ..." parts
+     * \return          -- list of parts
+     */
     QList<JoinPart> joinParts() const
     {
         return _joinParts;
     }
 
-    static const QString SELECT_SQL;
-
+    /*!
+     * \brief joinTail  -- all "JOIN ..." parts joined together
+     * \return          -- SQL of the parts
+     */
     QString joinTail() const;
+
+    /*!
+     * \brief tail  -- GROUP BY, HAVING, ORDER BY, LIMIT and OFFSET parts joined together
+     * \return      -- SQL of the parts
+     */
+    QString tail() const;
 
 private:
     const Query* _query;

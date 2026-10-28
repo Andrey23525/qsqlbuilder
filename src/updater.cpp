@@ -1,7 +1,6 @@
-#include "Updater.h"
-#include "Query.h"
-
-#include <QSqlQuery>
+#include "updater.h"
+#include "query.h"
+#include "where.h"
 
 struct Updater::UpdaterPrivate {
     UpdaterPrivate(const Query* q, const QVariantMap& updateValues) : _query(q), _updateValues(updateValues)
@@ -14,19 +13,20 @@ struct Updater::UpdaterPrivate {
     QString _where;
 };
 
-const QString Updater::UPDATE_SQL { "UPDATE %1 SET %2 WHERE %3" };
-
 /***************************************************************************************/
 
-Updater::Updater(const Query* q, const QVariantMap& updateValues) : impl(new UpdaterPrivate(q, updateValues))
+Updater::Updater(const Query* q, const QVariantMap& updateValues)
 {
+    impl = std::make_unique<UpdaterPrivate>(q, updateValues);
 }
 
 Updater::~Updater()
 {
 }
 
-Updater::Updater(Updater&&) = default;
+Updater::Updater(Updater&& rhs) noexcept = default;
+
+Updater& Updater::operator=(Updater&& rhs) noexcept = default;
 
 Updater Updater::where(ClauseUtils&& clause) &&
 {
@@ -37,9 +37,17 @@ Updater Updater::where(ClauseUtils&& clause) &&
 QString Updater::sql() const
 {
     QStringList setPart;
-    for(const QString& key : impl->_updateValues.keys()) {
-        setPart << QString("\"%1\"=%2").arg(key).arg(ClauseUtils::escapeValue(impl->_updateValues[key]));
+    for(auto it = impl->_updateValues.cbegin(); it != impl->_updateValues.cend(); ++it) {
+        const QString value = ClauseUtils::escapeValue(it.value());
+        setPart << QString("\"%1\"=%2").arg(it.key(), value);
     }
 
-    return Updater::UPDATE_SQL.arg(impl->_query->tableName()).arg(setPart.join(',')).arg(impl->_where.isEmpty() ? "True" : impl->_where);
+    QString where = impl->_where;
+    if(where.isEmpty()) {
+        where = matchAllSql;
+    }
+
+    const QString tableName = impl->_query->tableName();
+    const QString setSql = setPart.join(',');
+    return updateSqlTemplate.arg(tableName, setSql, where);
 }

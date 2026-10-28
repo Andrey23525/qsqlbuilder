@@ -1,9 +1,16 @@
 #include "where.h"
-#include "Query.h"
 
 ClauseUtils::ClauseUtils(const QString& field, const QString& op, const QString& value)
-    : _sql(QString("\"%1\" %2 %3").arg(field, op, value))
 {
+    const QString sql = QString("\"%1\" %2 %3").arg(field, op, value);
+    _sql = sql;
+}
+
+ClauseUtils ClauseUtils::comparison(const QString& fieldName, const QString& op, const QVariant& value)
+{
+    const QString text = value.toString();
+    const QString escaped = ClauseUtils::escapeValue(text);
+    return ClauseUtils(fieldName, op, escaped);
 }
 
 ClauseUtils ClauseUtils::operator!() &&
@@ -32,48 +39,55 @@ QString ClauseUtils::sql() &&
 QString ClauseUtils::escapeValue(const QVariant& value)
 {
     /* Honestly taken from QSqlDriver class */
-    const auto NULL_STR = QStringLiteral("NULL");
-
-    if(value.isNull())
-        return NULL_STR;
+    if(value.isNull()) {
+        return nullSql;
+    }
 
     QString result;
 
-    switch(value.type()) {
-        case QVariant::Int:
-        case QVariant::UInt:
-            result = value.toString();
-            break;
+    switch(value.typeId()) {
+        case QMetaType::QDate: {
+            const QDate date = value.toDate();
+            if(!date.isValid()) {
+                return nullSql;
+            }
 
-        case QVariant::Date:
-            result = value.toDate().isValid() ? value.toDate().toString(Qt::ISODate) : NULL_STR;
+            result = date.toString(Qt::ISODate);
             break;
-        case QVariant::Time:
-            result = value.toTime().isValid() ? value.toTime().toString(Qt::ISODate) : NULL_STR;
-            break;
-        case QVariant::DateTime:
-            result = value.toDateTime().isValid() ? value.toDateTime().toString(Qt::ISODate) : NULL_STR;
-            break;
+        }
 
-        case QVariant::String:
-        case QVariant::Char:
+        case QMetaType::QTime: {
+            const QTime time = value.toTime();
+            if(!time.isValid()) {
+                return nullSql;
+            }
+
+            result = time.toString(Qt::ISODate);
+            break;
+        }
+
+        case QMetaType::QDateTime: {
+            const QDateTime dateTime = value.toDateTime();
+            if(!dateTime.isValid()) {
+                return nullSql;
+            }
+
+            result = dateTime.toString(Qt::ISODate);
+            break;
+        }
+
+        case QMetaType::QString:
+        case QMetaType::QChar:
             result = value.toString().trimmed().replace('\'', "''");
             break;
 
-        case QVariant::Bool:
+        case QMetaType::Bool:
             result = QString::number(value.toBool());
             break;
 
-        case QVariant::ByteArray: {
-            static const char hexchars[] = "0123456789abcdef";
-            QString res;
-            QByteArray ba = value.toByteArray();
-            for(int i = 0; i < ba.size(); ++i) {
-                uchar s = static_cast<uchar>(ba[i]);
-                res += QLatin1Char(hexchars[s >> 4]);
-                res += QLatin1Char(hexchars[s & 0x0f]);
-            }
-            result = res;
+        case QMetaType::QByteArray: {
+            const QByteArray hex = value.toByteArray().toHex();
+            result = QString::fromLatin1(hex);
             break;
         }
 
@@ -86,44 +100,48 @@ QString ClauseUtils::escapeValue(const QVariant& value)
 
 ClauseUtils EQ(const QString& fieldName, const QVariant& value)
 {
-    return ClauseUtils { fieldName, "=", ClauseUtils::escapeValue(value.toString()) };
+    return ClauseUtils::comparison(fieldName, "=", value);
 }
 
 ClauseUtils NEQ(const QString& fieldName, const QVariant& value)
 {
-    return ClauseUtils { fieldName, "!=", ClauseUtils::escapeValue(value.toString()) };
+    return ClauseUtils::comparison(fieldName, "!=", value);
 }
 
 ClauseUtils LT(const QString& fieldName, const QVariant& value)
 {
-    return ClauseUtils { fieldName, "<", ClauseUtils::escapeValue(value.toString()) };
+    return ClauseUtils::comparison(fieldName, "<", value);
 }
 
 ClauseUtils GT(const QString& fieldName, const QVariant& value)
 {
-    return ClauseUtils { fieldName, ">", ClauseUtils::escapeValue(value.toString()) };
+    return ClauseUtils::comparison(fieldName, ">", value);
 }
 
 ClauseUtils LE(const QString& fieldName, const QVariant& value)
 {
-    return ClauseUtils { fieldName, "<=", ClauseUtils::escapeValue(value.toString()) };
+    return ClauseUtils::comparison(fieldName, "<=", value);
 }
 
 ClauseUtils GE(const QString& fieldName, const QVariant& value)
 {
-    return ClauseUtils { fieldName, ">=", ClauseUtils::escapeValue(value.toString()) };
+    return ClauseUtils::comparison(fieldName, ">=", value);
 }
 
 ClauseUtils IN(const QString& fieldName, const QVariantList& values)
 {
     QStringList stringValues;
-    for(const QVariant& value : values)
+    for(const QVariant& value : values) {
         stringValues << ClauseUtils::escapeValue(value);
+    }
 
-    return ClauseUtils { fieldName, "IN", QString("(%1)").arg(stringValues.join(',')) };
+    const QString joined = stringValues.join(',');
+    const QString list = QString("(%1)").arg(joined);
+    return ClauseUtils(fieldName, "IN", list);
 }
 
 ClauseUtils IS_NULL(const QString& fieldName)
 {
-    return ClauseUtils { fieldName, "IS", ClauseUtils::escapeValue(QVariant()) };
+    const QString nullValue = nullSql;
+    return ClauseUtils(fieldName, "IS", nullValue);
 }

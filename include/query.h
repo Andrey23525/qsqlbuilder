@@ -1,7 +1,6 @@
 #pragma once
 
-#include "Where.h"
-
+class ClauseUtils;
 class Selector;
 class Inserter;
 class Deleter;
@@ -41,7 +40,7 @@ public:
 
     /*!
      * \brief delete_       -- creates DELETE query generator
-     * \param whereClause   -- "WHERE ..." clause (see OP namespace for details)
+     * \param whereClause   -- "WHERE ..." clause (see where.h for details)
      * \return              -- delete query generator
      */
     Deleter delete_(ClauseUtils&& whereClause) const;

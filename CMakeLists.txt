@@ -30,8 +30,14 @@ file(GLOB_RECURSE SQLBUILDER_SOURCES CONFIGURE_DEPENDS
     "${CMAKE_CURRENT_SOURCE_DIR}/src/*.cpp"
 )
 
+# Headers are listed as sources so that AUTOMOC processes them: Q_GADGET classes live in include/
+file(GLOB_RECURSE SQLBUILDER_HEADERS CONFIGURE_DEPENDS
+    "${CMAKE_CURRENT_SOURCE_DIR}/include/*.h"
+)
+
 qt_add_library(SQLBuilder STATIC
     ${SQLBUILDER_SOURCES}
+    ${SQLBUILDER_HEADERS}
 )
 
 add_library(SQLBuilder::SQLBuilder ALIAS SQLBuilder)

@@ -1,6 +1,6 @@
 #pragma once
 
-#include "Where.h"
+class ClauseUtils;
 class Query;
 
 /*!
@@ -21,13 +21,27 @@ public:
      * (obviously) column names on values being set
      */
     Updater(const Query* q, const QVariantMap& updateValues);
-    ~Updater();
-
-    Updater(Updater&&);
-    Updater& operator=(Updater&&) = default;
 
     /*!
-     * \brief where     -- "WHERE ..." clause (see OP namespace for details)
+     * \brief ~Updater  -- destructor
+     */
+    ~Updater();
+
+    /*!
+     * \brief Updater   -- move constructor
+     * \param rhs       -- generator to be moved from
+     */
+    Updater(Updater&& rhs) noexcept;
+
+    /*!
+     * \brief operator= -- move assignment
+     * \param rhs       -- generator to be moved from
+     * \return          -- this generator
+     */
+    Updater& operator=(Updater&& rhs) noexcept;
+
+    /*!
+     * \brief where     -- "WHERE ..." clause (see where.h for details)
      * \param clause    -- some aggregated clause
      * \return          -- this generator as rvalue to be reused
      */
@@ -42,6 +56,4 @@ public:
 private:
     struct UpdaterPrivate;
     std::unique_ptr<UpdaterPrivate> impl;
-
-    static const QString UPDATE_SQL;
 };

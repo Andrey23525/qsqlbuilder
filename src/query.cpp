@@ -1,9 +1,10 @@
-#include "Query.h"
+#include "query.h"
 
-#include "Deleter.h"
-#include "Inserter.h"
-#include "Selector.h"
-#include "Updater.h"
+#include "deleter.h"
+#include "inserter.h"
+#include "selector.h"
+#include "updater.h"
+#include "where.h"
 
 Query::Query(const QString& tableName, const QString& primaryKey) : _tableName(tableName), _primaryKey(primaryKey)
 {
@@ -31,7 +32,7 @@ Inserter Query::insert(const QStringList& fields) const
 
 Deleter Query::delete_(ClauseUtils&& whereClause) const
 {
-    return Deleter(this, std::forward<ClauseUtils>(whereClause));
+    return Deleter(this, std::move(whereClause));
 }
 
 Updater Query::update(const QVariantMap& updateValues) const

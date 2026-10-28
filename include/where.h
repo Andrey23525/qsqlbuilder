@@ -1,47 +1,58 @@
 #pragma once
 
 /*!
- * Here goes a namespase of helpers that implement "WHERE ..." support
+ * Here go the helpers that implement "WHERE ..." support
  * in all the generators. Can be extended with other conditions, perhaps.
  */
 /*!
  * \brief The ClauseUtils class
  * is an internal class, that translates C++ boolean logic into "WHERE ..." statements.
  * It optimizes nothing, no syntax tree parsing here, so don't abuse your queries with too much
- * of ClauseUtilss. Executed ClauseUtils is guaranteed to have the same interpretation when calculated by
+ * of clauses. Executed clause is guaranteed to have the same interpretation when calculated by
  * database as you've written in your sources. Just using braces here =)
  */
 class ClauseUtils {
 public:
     /*!
-     * \brief ClauseUtils    -- is a constructor of smth like " col='val' "
-     * \param field     -- column name in the ClauseUtils
-     * \param op        -- ClauseUtils operation (=,>,<, IN, etc.)
-     * \param value     -- value in the ClauseUtils
+     * \brief ClauseUtils   -- is a constructor of smth like " col='val' "
+     * \param field         -- column name in the clause
+     * \param op            -- clause operation (=,>,<, IN, etc.)
+     * \param value         -- already escaped value in the clause
      */
     ClauseUtils(const QString& field, const QString& op, const QString& value);
 
     /*!
-     * \brief operator ! -- is a SQL negation, uses "NOT (...)"
-     * \return           -- this mini-generator as rvalue to be reused
+     * \brief comparison    -- constructs " col <op> 'val' " clause, used by EQ(), LT() and the others
+     * \param fieldName     -- column name
+     * \param op            -- comparison operation (=, !=, <, >, <=, >=)
+     * \param value         -- value to be escaped and used
+     * \return              -- clause entity
+     */
+    static ClauseUtils comparison(const QString& fieldName, const QString& op, const QVariant& value);
+
+    /*!
+     * \brief operator! -- is a SQL negation, uses "NOT (...)"
+     * \return          -- this mini-generator as rvalue to be reused
      */
     ClauseUtils operator!() &&;
 
     /*!
-     * \brief operator ! -- is a SQL logical conjunction, uses "(...) AND (...)"
-     * \return           -- this mini-generator as rvalue to be reused
+     * \brief operator&&    -- is a SQL logical conjunction, uses "(...) AND (...)"
+     * \param other         -- right part of the conjunction
+     * \return              -- this mini-generator as rvalue to be reused
      */
     ClauseUtils operator&&(ClauseUtils&& other) &&;
 
     /*!
-     * \brief operator ! -- is a SQL logical union, uses "(...) OR (...)"
-     * \return           -- this mini-generator as rvalue to be reused
+     * \brief operator||    -- is a SQL logical union, uses "(...) OR (...)"
+     * \param other         -- right part of the union
+     * \return              -- this mini-generator as rvalue to be reused
      */
     ClauseUtils operator||(ClauseUtils&& other) &&;
 
     /*!
-     * \brief sql    -- returns the curently generated SQL
-     * \return          -- string with the accumulated ClauseUtils
+     * \brief sql   -- returns the curently generated SQL
+     * \return      -- string with the accumulated clause
      */
     QString sql() &&;
 
@@ -49,10 +60,10 @@ public:
      * \brief escapeValue   -- escapes values due to database rules. Honestly taken from
      * the QSqlDriver class (same idea, written in a more simple way). Has not been tested fully,
      * the target was PostgreSQL, so binary data may not be supported by other DB engines. It's not
-     * only used by the ClauseUtilss, also internally used in other generators.
+     * only used by the clauses, also internally used in other generators.
      * DB identifiers are just escaped like "id" everywhere through the code.
      * \param value         -- value to be escaped propely
-     * \return              -- string represetnation of the value to be used
+     * \return              -- string represetnation of the value to be used, NULL for null and invalid values
      */
     static QString escapeValue(const QVariant& value);
 
@@ -61,64 +72,64 @@ private:
 };
 
 /*!
- * \brief EQ        -- helper, that constructs " col='val' " ClauseUtils part
+ * \brief EQ        -- helper, that constructs " col='val' " clause part
  * \param fieldName -- column name
  * \param value     -- value to be used
- * \return          -- ClauseUtils entity (see the above class)
+ * \return          -- clause entity (see the above class)
  */
 ClauseUtils EQ(const QString& fieldName, const QVariant& value);
 
 /*!
- * \brief NEQ       -- helper, that constructs " col!='val' " ClauseUtils part
+ * \brief NEQ       -- helper, that constructs " col!='val' " clause part
  * \param fieldName -- column name
  * \param value     -- value to be used
- * \return          -- ClauseUtils entity (see the above class)
+ * \return          -- clause entity (see the above class)
  */
 ClauseUtils NEQ(const QString& fieldName, const QVariant& value);
 
 /*!
- * \brief LT        -- helper, that constructs " col<'val' " ClauseUtils part
+ * \brief LT        -- helper, that constructs " col<'val' " clause part
  * \param fieldName -- column name
  * \param value     -- value to be used
- * \return          -- ClauseUtils entity (see the above class)
+ * \return          -- clause entity (see the above class)
  */
 ClauseUtils LT(const QString& fieldName, const QVariant& value);
 
 /*!
- * \brief GT        -- helper, that constructs " col>'val' " ClauseUtils part
+ * \brief GT        -- helper, that constructs " col>'val' " clause part
  * \param fieldName -- column name
  * \param value     -- value to be used
- * \return          -- ClauseUtils entity (see the above class)
+ * \return          -- clause entity (see the above class)
  */
 ClauseUtils GT(const QString& fieldName, const QVariant& value);
 
 /*!
- * \brief LE        -- helper, that constructs " col<='val' " ClauseUtils part
+ * \brief LE        -- helper, that constructs " col<='val' " clause part
  * \param fieldName -- column name
  * \param value     -- value to be used
- * \return          -- ClauseUtils entity (see the above class)
+ * \return          -- clause entity (see the above class)
  */
 ClauseUtils LE(const QString& fieldName, const QVariant& value);
 
 /*!
- * \brief GE        -- helper, that constructs " col>='val' " ClauseUtils part
+ * \brief GE        -- helper, that constructs " col>='val' " clause part
  * \param fieldName -- column name
  * \param value     -- value to be used
- * \return          -- ClauseUtils entity (see the above class)
+ * \return          -- clause entity (see the above class)
  */
 ClauseUtils GE(const QString& fieldName, const QVariant& value);
 
 /*!
- * \brief IN        -- helper, that constructs "col IN ('val1', 'val2', ...)" ClauseUtils part
+ * \brief IN        -- helper, that constructs "col IN ('val1', 'val2', ...)" clause part
  * \param fieldName -- column name
  * \param values    -- values to be used
- * \return          -- ClauseUtils entity (see the above class)
+ * \return          -- clause entity (see the above class)
  */
 ClauseUtils IN(const QString& fieldName, const QVariantList& values);
 
 /*!
- * \brief EQ        -- helper, that constructs "col IS NULL" ClauseUtils part
+ * \brief IS_NULL   -- helper, that constructs "col IS NULL" clause part
  * \param fieldName -- column name
- * \return          -- ClauseUtils entity (see the above class)
+ * \return          -- clause entity (see the above class)
  */
 ClauseUtils IS_NULL(const QString& fieldName);

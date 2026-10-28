@@ -17,10 +17,24 @@ public:
      * \param fields    -- list of column names in INSERT INTO tbl (...)
      */
     Inserter(const Query* q, const QStringList& fields);
+
+    /*!
+     * \brief ~Inserter -- destructor
+     */
     ~Inserter();
 
-    Inserter(Inserter&&);
-    Inserter& operator=(Inserter&&) = default;
+    /*!
+     * \brief Inserter  -- move constructor
+     * \param rhs       -- generator to be moved from
+     */
+    Inserter(Inserter&& rhs) noexcept;
+
+    /*!
+     * \brief operator= -- move assignment
+     * \param rhs       -- generator to be moved from
+     * \return          -- this generator
+     */
+    Inserter& operator=(Inserter&& rhs) noexcept;
 
     /*!
      * \brief values    -- adds list of values to be inserted to the generator
@@ -34,7 +48,6 @@ private:
     std::unique_ptr<InserterPrivate> impl;
 
     friend class InserterPerformer;
-    static const QString INSERT_SQL;
 };
 
 /*******************************************************************************************/
@@ -52,6 +65,9 @@ private:
 class InserterPerformer {
     Q_DISABLE_COPY(InserterPerformer)
 public:
+    /*!
+     * \brief ~InserterPerformer -- destructor
+     */
     ~InserterPerformer();
 
     /*!
@@ -60,8 +76,18 @@ public:
      */
     InserterPerformer(Inserter&& inserter);
 
-    InserterPerformer(InserterPerformer&&) = default;
-    InserterPerformer& operator=(InserterPerformer&&) = default;
+    /*!
+     * \brief InserterPerformer -- move constructor
+     * \param rhs               -- generator to be moved from
+     */
+    InserterPerformer(InserterPerformer&& rhs) noexcept;
+
+    /*!
+     * \brief operator= -- move assignment
+     * \param rhs       -- generator to be moved from
+     * \return          -- this generator
+     */
+    InserterPerformer& operator=(InserterPerformer&& rhs) noexcept;
 
     /*!
      * \brief values    -- adds list of values to be inserted to the generator

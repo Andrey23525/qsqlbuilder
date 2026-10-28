@@ -1,11 +1,9 @@
-#include "Deleter.h"
-#include "Query.h"
-
-#include <QSqlError>
-#include <QSqlQuery>
+#include "deleter.h"
+#include "query.h"
+#include "where.h"
 
 struct Deleter::DeleterPrivate {
-    DeleterPrivate(const Query* query, ClauseUtils&& whereClause) : _query(query), _where { std::move(whereClause).sql() }
+    DeleterPrivate(const Query* query, const QString& where) : _query(query), _where(where)
     {
     }
 
@@ -13,21 +11,29 @@ struct Deleter::DeleterPrivate {
     QString _where;
 };
 
-const QString Deleter::DELETE_SQL { "DELETE FROM %1 WHERE %2;" };
-
 /***************************************************************************************/
 
-Deleter::Deleter(const Query* query, ClauseUtils&& whereClause) : impl(new DeleterPrivate(query, std::forward<ClauseUtils>(whereClause)))
+Deleter::Deleter(const Query* query, ClauseUtils&& whereClause)
 {
+    const QString where = std::move(whereClause).sql();
+    impl = std::make_unique<DeleterPrivate>(query, where);
 }
 
 Deleter::~Deleter()
 {
 }
 
-Deleter::Deleter(Deleter&&) = default;
+Deleter::Deleter(Deleter&& rhs) noexcept = default;
+
+Deleter& Deleter::operator=(Deleter&& rhs) noexcept = default;
 
 QString Deleter::sql() const
 {
-    return Deleter::DELETE_SQL.arg(impl->_query->tableName()).arg(impl->_where.isEmpty() ? "True" : impl->_where);
+    QString where = impl->_where;
+    if(where.isEmpty()) {
+        where = matchAllSql;
+    }
+
+    const QString tableName = impl->_query->tableName();
+    return deleteSqlTemplate.arg(tableName, where);
 }

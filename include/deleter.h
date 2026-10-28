@@ -1,7 +1,6 @@
 #pragma once
 
-#include "Where.h"
-
+class ClauseUtils;
 class Query;
 
 /*!
@@ -16,13 +15,27 @@ public:
     /*!
      * \brief Deleter       -- constructs the generator
      * \param q             -- ptr to the Query class, that created it
-     * \param whereClause   -- "WHERE ..." clause (see OP namespace for details)
+     * \param whereClause   -- "WHERE ..." clause (see where.h for details)
      */
     Deleter(const Query* q, ClauseUtils&& whereClause);
+
+    /*!
+     * \brief ~Deleter  -- destructor
+     */
     ~Deleter();
 
-    Deleter(Deleter&&);
-    Deleter& operator=(Deleter&&) = default;
+    /*!
+     * \brief Deleter   -- move constructor
+     * \param rhs       -- generator to be moved from
+     */
+    Deleter(Deleter&& rhs) noexcept;
+
+    /*!
+     * \brief operator= -- move assignment
+     * \param rhs       -- generator to be moved from
+     * \return          -- this generator
+     */
+    Deleter& operator=(Deleter&& rhs) noexcept;
 
     /*!
      * \brief sql   -- generates the query, Database::execute() performs it
@@ -33,6 +46,4 @@ public:
 private:
     struct DeleterPrivate;
     std::unique_ptr<DeleterPrivate> impl;
-
-    static const QString DELETE_SQL;
 };
