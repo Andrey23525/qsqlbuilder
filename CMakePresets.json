@@ -36,8 +36,7 @@
       "inherits": "windows-msvc-base",
       "cacheVariables": {
         "CMAKE_BUILD_TYPE": "RelWithDebInfo",
-        "CMAKE_INTERPROCEDURAL_OPTIMIZATION": "ON",
-        "DEBUG_SYMBOLS_FOR_RELEASE": "ON"
+        "CMAKE_INTERPROCEDURAL_OPTIMIZATION": "ON"
       }
     },
     {
@@ -78,7 +77,7 @@
       "displayName": "RelWithDebInfo",
       "configurePreset": "relwithdebinfo",
       "targets": [
-        "SQLBuilder"
+        "QSQLBuilder"
       ]
     },
     {
@@ -86,7 +85,7 @@
       "displayName": "Debug",
       "configurePreset": "debug",
       "targets": [
-        "SQLBuilder"
+        "QSQLBuilder"
       ]
     },
     {
@@ -94,7 +93,7 @@
       "displayName": "Release",
       "configurePreset": "release",
       "targets": [
-        "SQLBuilder"
+        "QSQLBuilder"
       ]
     }
   ],

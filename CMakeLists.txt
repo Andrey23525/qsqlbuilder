@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.22)
 
-project(SQLBuilder
+project(QSQLBuilder
     VERSION 1.0.0
     LANGUAGES CXX
 )
@@ -53,23 +53,23 @@ file(GLOB_RECURSE SQLBUILDER_HEADERS CONFIGURE_DEPENDS
     "${CMAKE_CURRENT_SOURCE_DIR}/include/*.h"
 )
 
-qt_add_library(SQLBuilder STATIC
+qt_add_library(${PROJECT_NAME} STATIC
     ${SQLBUILDER_SOURCES}
     ${SQLBUILDER_HEADERS}
 )
 
-add_library(SQLBuilder::SQLBuilder ALIAS SQLBuilder)
+add_library(QSQLBuilder::QSQLBuilder ALIAS ${PROJECT_NAME})
 
-target_include_directories(SQLBuilder
+target_include_directories(${PROJECT_NAME}
     PUBLIC
         $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
         $<INSTALL_INTERFACE:include>
 )
 
-target_compile_features(SQLBuilder PUBLIC cxx_std_23)
-target_precompile_headers(SQLBuilder PUBLIC include/pch.h)
+target_compile_features(${PROJECT_NAME} PUBLIC cxx_std_23)
+target_precompile_headers(${PROJECT_NAME} PUBLIC include/pch.h)
 
-target_link_libraries(SQLBuilder
+target_link_libraries(${PROJECT_NAME}
     PUBLIC
         Qt6::Core
         Qt6::Sql
