@@ -123,3 +123,14 @@ Selector Selector::offset(int offset) &&
     _offset = QString("OFFSET %1").arg(offset);
     return std::move(*this);
 }
+
+QString Selector::sql() const
+{
+    const QString tableName = _query->tableName();
+
+    const QString fields = _fields.isEmpty() ? QString("\"%1\".*").arg(tableName) : _fields.join(", ");
+
+    const QString where = _where.isEmpty() ? matchAllSql : _where;
+
+    return selectSqlTemplate.arg(fields, tableName, joinTail(), where, tail());
+}

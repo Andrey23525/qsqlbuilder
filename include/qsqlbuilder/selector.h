@@ -263,6 +263,8 @@ public:
      */
     QString tail() const;
 
+    QString sql() const;
+
 private:
     const Query* _query;
     QStringList _fields;
