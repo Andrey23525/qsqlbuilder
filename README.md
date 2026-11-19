@@ -211,3 +211,11 @@ res = db.execute(query.select({"MAX(_id) as max_id"})); // or even like that
 ```
 
 There possible exist some other hacky ways to use the builder, I just did my best to make sure that the worst you'd get is a query error, returned by `Database` (exactly as Qt reports it, receiving from the database itself), all the rest builder classes and helpers are hopefully lightweight enought not to bring any unexpected trouble.
+
+### Connection and transaction commands
+
+`Query::beginTransaction()`, `Query::commit()` and `Query::rollback()` return SQL text only. They never execute statements, create a connection or commit a transaction on their own. Execute the resulting SQL on the connection whose transaction you intend to control; do not send COMMIT through `Database::performSQL()`, which manages its own transaction.
+
+`Query::set(option, expression)` returns `SET <option> <expression>;`. Both arguments are trusted, dialect-specific SQL syntax, not bound user input. The expression is deliberately not quoted or escaped: SQL Server accepts `Query::set("LOCK_TIMEOUT", "30000")` and `Query::set("TRANSACTION ISOLATION LEVEL", "SERIALIZABLE")`. This permits keywords and numeric syntax without turning them into string literals. Applications must not pass unchecked external strings.
+
+The `QSQLBUILDER_BUILD_TESTS` CMake option enables deterministic command-generation tests and registers them with CTest. It defaults to ON for a standalone build and OFF when included as a subdirectory.

@@ -6,6 +6,26 @@
 #include "qsqlbuilder/updater.h"
 #include "qsqlbuilder/where.h"
 
+QString Query::beginTransaction()
+{
+    return QStringLiteral("BEGIN TRANSACTION;");
+}
+
+QString Query::commit()
+{
+    return QStringLiteral("COMMIT;");
+}
+
+QString Query::rollback()
+{
+    return QStringLiteral("ROLLBACK;");
+}
+
+QString Query::set(const QString& option, const QString& expression)
+{
+    return QStringLiteral("SET %1 %2;").arg(option, expression);
+}
+
 Query::Query(const QString& tableName, const QString& primaryKey) : _tableName(tableName), _primaryKey(primaryKey)
 {
 }

@@ -74,3 +74,12 @@ target_link_libraries(${PROJECT_NAME}
         Qt6::Core
         Qt6::Sql
 )
+
+option(QSQLBUILDER_BUILD_TESTS "Build deterministic SQL generation tests." ${QSQLBuilder_IS_TOP_LEVEL})
+if(QSQLBUILDER_BUILD_TESTS)
+    enable_testing()
+    add_executable(qsqlbuilder_command_tests tests/commands.cpp)
+    target_precompile_headers(qsqlbuilder_command_tests PRIVATE include/qsqlbuilder/pch.h)
+    target_link_libraries(qsqlbuilder_command_tests PRIVATE QSQLBuilder::QSQLBuilder)
+    add_test(NAME qsqlbuilder_command_tests COMMAND qsqlbuilder_command_tests)
+endif()
