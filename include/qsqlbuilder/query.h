@@ -17,6 +17,15 @@ class Updater;
  */
 class Query {
 public:
+    /// @brief Builds BEGIN TRANSACTION without executing it or opening a connection.
+    static QString beginTransaction();
+    /// @brief Builds COMMIT for a transaction owned by the caller.
+    static QString commit();
+    /// @brief Builds ROLLBACK for a transaction owned by the caller.
+    static QString rollback();
+    /// @brief Builds SET from trusted SQL syntax; neither argument is a bound data value.
+    static QString set(const QString& option, const QString& expression);
+
     /*!
      * \brief Query      -- constructor
      * \param tableName  -- name of the table to be used in the current set of queries
